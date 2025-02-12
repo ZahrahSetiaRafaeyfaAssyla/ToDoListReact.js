@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="d-flex justify-content-start align-items-start vh-50 bg-light">
+    <div id="app" class="container w-100"></div>
+
+    <script type="text/jsx">
+        function TodoApp() {
+            const [activity, setActivity] = React.useState("");
+            const [lists, setLists] = React.useState([]);
+            const [checkedItems, setCheckedItems] = React.useState({});
+            const [deleteIndex, setDeleteIndex] = React.useState(null);
+            const [editIndex, setEditIndex] = React.useState(null);
+            const [editText, setEditText] = React.useState("");
+
+            function handleChange(value) {
+                setActivity(value);
+            }
+
+            function handleSubmit(event) {
+                event.preventDefault();
+                if (activity.trim() === "") return;
+                setLists(prevLists => [...prevLists, activity]); // ✅ Tambah ke bawah, bukan ke atas
+                setActivity("");
+            }
+
+            function handleDeleteClick(index) {
+                setDeleteIndex(index);
+            }
+
+            function handleConfirmDelete(index) {
+                setLists(lists.filter((_, i) => i !== index));
+                setCheckedItems(prev => {
+                    const updated = { ...prev };
+                    delete updated[index];
+                    return updated;
+                });
+            }
+
+            function handleEditClick(index) {
+                setEditIndex(index);
+                setEditText(lists[index]);
+            }
+
+            function handleEditChange(value) {
+                setEditText(value);
+            }
+
+            function handleConfirmEdit(index) {
+                if (editText.trim() === "") return;
+                const updatedLists = [...lists];
+                updatedLists[index] = editText;
+                setLists(updatedLists);
+            }
+
+            function handleCheck(index) {
+                setCheckedItems(prev => ({
+                    ...prev,
+                    [index]: !prev[index]
+                }));
+            }
+
+            return (
+                <div className="w-100">
+                {/* ✅ Naikin posisi dengan margin */}
+                <h2 className="mb-3 text-center">To-Do List</h2>
+
+                {/* ✅ Form tambah tugas */}
+                <form onSubmit={handleSubmit} className="mb-3">
+                    <div className="input-group">
+                        <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="Tambah tugas..."
+                            value={activity}
+                            onChange={(event) => handleChange(event.target.value)}
+                        />
+                        <button type="submit" className="btn btn-danger">+</button>
+                    </div>
+                </form>
+                    {/* ✅ LIST TUGAS (TAMBAH KE BAWAH) */}
+                    <ul className="list-group">
+                        {lists.map((item, index) => (
+                            <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                                {item} 
+                                <div>
+                                    <button 
+                                        className={`btn btn-sm ${checkedItems[index] ? "btn-success" : "btn-outline-success"}`} 
+                                        onClick={() => handleCheck(index)}
+                                    >✔</button>
+                                    <button 
+                                        className="btn btn-warning btn-sm ms-1"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editModal"
+                                        onClick={() => handleEditClick(index)}
+                                    >✏</button>
+                                    <button 
+                                        className="btn btn-danger btn-sm ms-1" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#confirmDeleteModal"
+                                        onClick={() => handleDeleteClick(index)}
+                                    >🗑</button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+
+                    {/* ✅ MODAL HAPUS */}
+                    <div className="modal fade" id="confirmDeleteModal" tabIndex="-1" aria-hidden="true">
+                        <div className="modal-dialog">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">Konfirmasi Hapus</h5>
+                                    <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div className="modal-body">
+                                    Yakin mau hapus tugas ini?
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" className="btn btn-danger" onClick={() => handleConfirmDelete(deleteIndex)} data-bs-dismiss="modal">
+                                        Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ✅ MODAL EDIT */}
+                    <div className="modal fade" id="editModal" tabIndex="-1" aria-hidden="true">
+                        <div className="modal-dialog">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">Edit Tugas</h5>
+                                    <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div className="modal-body">
+                                    <input 
+                                        type="text" 
+                                        className="form-control"
+                                        value={editText}
+                                        onChange={(event) => handleEditChange(event.target.value)}
+                                    />
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" className="btn btn-success" onClick={() => handleConfirmEdit(editIndex)} data-bs-dismiss="modal">
+                                        Simpan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("app"));
+        root.render(<TodoApp />);
+    </script>
+</body>
+</html>
